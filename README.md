@@ -10,7 +10,7 @@ The first portion of the code is tracking scroll movements as well as pauses.  W
 
 The second section records total time on the page, total number of pauses and even cummulative time for websites employing page hydration rather than page reloads.  These can be used to determine if the page / product was of interest to the visitor or if they were simply clicking through the choices.
 
-The last section looks at individual divs, such as product description, calulates the number of words within, figures out approxomately how much time is needed to read and how many pauses are likely during that reading.  It can be set to **"read"** for someone reading every word or to **"skim"** if your visitors are more likely to skim through the info, but still be interested. Checking both the elapsed time and total pasues against the estimates gives a general idea if the visitor read the content.
+The last section looks at individual divs, such as product description, calulates the number of words within, figures out approxomately how much time is needed to read and how many pauses are likely during that reading.  It can be set to **"read"** for someone reading every word or to **"skim"** if your visitors are more likely to skim through the info, but still be interested. Checking both the elapsed time and total pauses against the estimates gives a general idea if the visitor read the content.
 
 ## Potential
 

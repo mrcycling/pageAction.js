@@ -158,3 +158,14 @@ function didRead(id,comp){
     return true;
   }
 }
+
+
+/*
+  Check if visitor bookmarks page, assume interest even without a true 'read'
+*/
+
+function bkmrkIt() {
+  return true;
+}
+
+browser.bookmarks.onCreated.addListener(bkmrkIt);

@@ -58,17 +58,6 @@ function pageMovement() {
     }
   }
 
-
-  // test functions for use with page_position_tracking.htm
-  document.getElementById('siteTime').innerHTML = siteTime;
-  document.getElementById('pgTime').innerHTML = pgTime;
-  document.getElementById('direction').innerHTML = direction;
-  document.getElementById('pgPercent').innerHTML = pgPercent;
-  document.getElementById('pgPauses').innerHTML = pgPauses;
-  document.getElementById('dvTime').innerHTML = dvTime;
-  document.getElementById('dvPauses').innerHTML = dvPauses;  
-  document.getElementById('readTest').innerHTML = readTest;
-
   // trigger pageMonitor once every 250ms
   setTimeout(pageMovement, 250);
 }

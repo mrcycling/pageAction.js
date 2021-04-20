@@ -6,14 +6,14 @@
 */
 
 // output variables from pageMovement
-var direction, siteTime, pgPercent, pgTime, pgPauses, dvTime, dvPauses, readTest;
+var direction, siteTime, pgPercent, pgTime, pgPauses, dvTime, dvPauses, readTest, currentPausedTime;
 // pageMovement calculation variables
 var scrollPos;
 // time variables: vt - visit start time, pt - page start time
 // dt - div start time, dp - div start pause count
 var vt, pt, dt, dp;
 // set variables to zero
-pgPauses = dvPauses = scrollPos = dp = 0;
+pgPauses = dvPauses = scrollPos = dp + currentPausedTime = 0;
 // start clocks
 vt = pt = dt = performance.now();
 // readTest set to empty 
@@ -46,8 +46,8 @@ function pageMovement() {
 
   // update time on page 
   let t1 = performance.now();
-  siteTime = t1 - vt;
-  pgTime = t1 - pt;
+  siteTime = (t1 - vt)/1000;
+  pgTime = (t1 - pt)/1000;
   dvTime = (t1 - dt)/1000;
 
   // if readTest activated, start comparing dvTime & dvPauses with estimates
@@ -56,6 +56,13 @@ function pageMovement() {
     if ((dvPauses >= estPauses) && (dvTime >= estTime)) {
       readTest = 'read';
     }
+  }
+  
+  // measure current pause time, use to block popup if just started reading
+  if(direction === 'paused') {
+    currentPausedTime = currentPausedTime + .250;    
+  } else {
+    currentPausedTime = 0;
   }
 
   // trigger pageMonitor once every 250ms

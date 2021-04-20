@@ -5,25 +5,19 @@
   current location on page
 */
 
-/* 
-  shared variables
-  direction: scrolldirection, up, down, paused
-  pausecnt: how many times visitor paused, assume to read or look at items
-  pauseTime: current length of pause, use to show items during rest period
-  scrollPos: current position on page in pixels
-  pagePercent: current position on page as percentage of total page
-  visitTime:  total visit time on website
-  pageTime: total visit time on webpage (use when hydrating pages)
-  divTime: total time a specific div is within the viewport
-  tv: start time for visitTime
-  tp: start time for PageTime
-*/
-
-var direction, pauseTime, pagePercent, visitTime, pageTime, divTime, pausecnt, scrollPos, tv, tp;
+// output variables from pageMovement
+var direction, siteTime, pgPercent, pgTime, pgPauses, dvTime, dvPauses, readTest;
+// pageMovement calculation variables
+var scrollPos;
+// time variables: vt - visit start time, pt - page start time
+// dt - div start time, dp - div start pause count
+var vt, pt, dt, dp;
 // set variables to zero
-pausecnt = scrollPos = 0;
-// set start time
-tv = tp = performance.now();
+pgPauses = dvPauses = scrollPos = dp = 0;
+// start clocks
+vt = pt = dt = performance.now();
+// readTest set to empty 
+readTest = '';
 
 
 function pageMovement() {
@@ -35,13 +29,11 @@ function pageMovement() {
       direction = 'down';
     } else {
       if (direction != 'paused') {
-        pausecnt++;
+        pgPauses++;
+        dvPauses++;
       }
       direction = 'paused';
     }
-  // test purpose only, remove from production
-  document.getElementById('direction').innerHTML = direction + ' - times paused: ' + pausecnt;
-  // test purpose end
 
   // saves the new position for iteration.
   scrollPos = (document.body.getBoundingClientRect()).top;
@@ -50,122 +42,133 @@ function pageMovement() {
   let docHeight = document.body.offsetHeight;
   let winHeight = window.innerHeight;
   let scrollPercent = scrollPos / (docHeight - winHeight);
-  pagePercent = Math.abs(Math.round(scrollPercent * 100));
-
-  // test purpose only, remove from production
-  document.getElementById('percent').innerHTML = pagePercent + '%';
-  // test purpose end
+  pgPercent = Math.abs(Math.round(scrollPercent * 100));
 
   // update time on page 
   let t1 = performance.now();
-  pageTime = t1 - tp;
-  
-  // test purpose only, remove from production
-  document.getElementById('time').innerHTML = (Math.round(pageTime/1000));
-  // test purpose end
+  siteTime = t1 - vt;
+  pgTime = t1 - pt;
+  dvTime = (t1 - dt)/1000;
+
+  // if readTest activated, start comparing dvTime & dvPauses with estimates
+  // once read conditions met change readTest to 'read'
+  if (readTest === 'test') {
+    if ((dvPauses >= estPauses) && (dvTime >= estTime)) {
+      readTest = 'read';
+    }
+  }
+
+
+  // test functions for use with page_position_tracking.htm
+  document.getElementById('siteTime').innerHTML = siteTime;
+  document.getElementById('pgTime').innerHTML = pgTime;
+  document.getElementById('direction').innerHTML = direction;
+  document.getElementById('pgPercent').innerHTML = pgPercent;
+  document.getElementById('pgPauses').innerHTML = pgPauses;
+  document.getElementById('dvTime').innerHTML = dvTime;
+  document.getElementById('dvPauses').innerHTML = dvPauses;  
+  document.getElementById('readTest').innerHTML = readTest;
 
   // trigger pageMonitor once every 250ms
   setTimeout(pageMovement, 250);
-
 }
-
-// get total time on website when using hydration
-function ttlVisit() {
-  var t2 = performance.now();
-  visitTime = t2 - tv;
-}
-
-// restart page timer after new page hydration
-function newPageTime() {
-  tp = performance.now();
-}
-
 
 /* 
-  Determining if section read divRead = true or false
+  Determining if section read
   Use a combination of number of pauses, total time spend with div in viewport
   to determine if it is likely the visitor actually skimmed the div's content
-  Use div height to coalculate needed time and minimum pauses
-  7 day tours on laptop:
-    day by day 40 secs for 600 words, plus minimum of 3 pauses?
-    highlights 15 secs, plus minimum of 3 pauses
+  Use div height to calculate needed time and minimum pauses
 */
 
 // time needed for reading words in div
 // comp (comprehension): skim, read
-var estTime;
-var estPauses
+var estTime, estPauses;
 function calcContent(id,comp) {
   var wordsPerMinute;
   if (comp === 'skim') { wordsPerMinute = 1000; } // Average 200 wpm, 20% read
   if (comp === 'read') { wordsPerMinute = 200; }
-  estPauses = Math.abs(textLength / 250); // Average words in viewport, adjust for target div layout
-  var cntnt = document.getElementById(id).innerHTML;
+  var cntnt = document.getElementById(id).textContent;
   let textLength = cntnt.split(" ").length; // Split by words
   if(textLength > 0){
-    estTime = Math.ceil(textLength / wordsPerMinute);
+    estTime = Math.abs(textLength / wordsPerMinute);
+    estPauses = Math.abs(textLength / 300); // Average words in viewport, adjust for target div layout
   }
+    document.getElementById('textLength').innerHTML = textLength;
 };
 
-/*
-  time spent with div in viewport, variables:
-  dt: time of entry into div
-  dn: time of exit from div
-  ps1, ps2: pause count start and finish
-  psnmbr: calculated number of pauses ps2-ps1
-*/
+// trigger observation of specific div (id) and apply function (fn)
+function watchDiv(id) {
+    // watch for intersection with viewport
+    const div2time = document.getElementById(id);
+    function cntTimeDiv(entries) {
+      entries.map((entry) => {
+        if (entry.isIntersecting) {
+          strtDiv();
+        } else {
+          endDiv();
+        }
+      });
+    }
+    const observer = new IntersectionObserver(cntTimeDiv);
+    observer.observe(div2time);
+    if (readTest === 'read') {
+      //remove observer
+      observer.unobserve(div2time);
+    }
+}
 
-var dt, dn, psnmbr, ps1, ps2;
-ps1 = ps2 = 0;
-
-function timeForDiv(id) {
+// trigger observation of specific div (id) and apply function (fn)
+function watchCTA(id) {
   // watch for intersection with viewport
   const div2time = document.getElementById(id);
   function cntTimeDiv(entries) {
     entries.map((entry) => {
       if (entry.isIntersecting) {
-        dt = performance.now();
-        ps1 = pausecnt;
+        hiRqst();
       } else {
-        dn = performance.now();
-        ps2 = pausecnt;
-        divTime = dn - dt; 
-        psnmbr = ps2 - ps1; 
-
-        // test purpose only, remove from production
-        document.getElementById('divTime').innerHTML = divTime + ' - paused: ' + psnmbr;
-        // test purpose end
+        xhiRqst();
       }
     });
   }
-  const observer = new IntersectionObserver(cntTimeDiv);
+  const observer = new IntersectionObserver(cntTimeDiv, {rootMargin: opts});
   observer.observe(div2time);
-
 }
 
-/*
-  Check if div was probably read
-  id = div id
-  comp = either 'skim' or 'read', depending on what your audience does
-*/
-function didRead(id,comp){
-  // calculate content details
-  calcContent(id,comp);
-  // measure action in div
-  timeForDiv(id);
-  // check if actual values surpassed estimated values
-  if (( psnmbr >= estPauses) && (divTime >= estTime)) {
-    return true;
+// set time clock for div, reset pause count and set readTest to 1 (in process)
+function strtDiv() {
+  if (direction === 'down') {
+    dt = performance.now();
+    dvPauses = 0;
+    if (readTest === '') {
+      readTest = 'test';
+    }
   }
 }
 
-
-/*
-  Check if visitor bookmarks page, assume interest even without a true 'read'
-*/
-
-function bkmrkIt() {
-  return true;
+// check when exiting if readTest successful, if not reset to 0
+function endDiv() {
+  if (readTest === 'test') {
+    readTest = '';
+  }
 }
 
-browser.bookmarks.onCreated.addListener(bkmrkIt);
+// if conditions right add highlight to request info CTA
+// change both estimates to (readTest === 'read')
+var rqstview = 1;
+function hiRqst() {
+  if ((rqstview < 3) && (readTest === 'read') && (direction === 'down')) {
+    $('rqstinfo').classList.add('inview');
+    rqstview++;
+  }
+}
+
+// remove highlight from request info CTA when scrolls out of view
+function xhiRqst() {
+    $('rqstinfo').classList.remove('inview');
+}
+
+// restart page timer after new page hydration, but preserve site timer
+function newPageTime() {
+  pt = dt = performance.now();
+  pgPauses = dvPauses = scrollPos = 0;
+}

@@ -22,3 +22,5 @@ Could be used to create "products viewed" menu that shows just the products the 
 
 A more robust reading estimator, that looks at div dimensions, including padding, font size, line height and browser viewport to more accurately determine how much shows at a time within the viewport and more accurately calculate the potential number of pauses need to read through.
 
+Make intersectionObservers more generic to allow multiple instances to track different aspects.
+

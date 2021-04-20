@@ -82,14 +82,13 @@ function calcContent(id,comp) {
     estTime = Math.abs(textLength / wordsPerMinute);
     estPauses = Math.abs(textLength / 300); // Average words in viewport, adjust for target div layout
   }
-    document.getElementById('textLength').innerHTML = textLength;
 };
 
 // trigger observation of specific div (id) and apply function (fn)
 function watchDiv(id) {
     // watch for intersection with viewport
-    const div2time = document.getElementById(id);
-    function cntTimeDiv(entries) {
+    const div2check = document.getElementById(id);
+    function uponEnter(entries) {
       entries.map((entry) => {
         if (entry.isIntersecting) {
           strtDiv();
@@ -98,19 +97,19 @@ function watchDiv(id) {
         }
       });
     }
-    const observer = new IntersectionObserver(cntTimeDiv);
-    observer.observe(div2time);
+    const observer = new IntersectionObserver(uponEnter);
+    observer.observe(div2check);
     if (readTest === 'read') {
       //remove observer
-      observer.unobserve(div2time);
+      observer.unobserve(div2check);
     }
 }
 
 // trigger observation of specific div (id) and apply function (fn)
 function watchCTA(id) {
   // watch for intersection with viewport
-  const div2time = document.getElementById(id);
-  function cntTimeDiv(entries) {
+  const cta2check = document.getElementById(id);
+  function whenSeeIt(entries) {
     entries.map((entry) => {
       if (entry.isIntersecting) {
         hiRqst();
@@ -119,8 +118,8 @@ function watchCTA(id) {
       }
     });
   }
-  const observer = new IntersectionObserver(cntTimeDiv, {rootMargin: opts});
-  observer.observe(div2time);
+  const observer = new IntersectionObserver(whenSeeIt);
+  observer.observe(cta2check);
 }
 
 // set time clock for div, reset pause count and set readTest to 1 (in process)

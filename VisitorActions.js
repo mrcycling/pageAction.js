@@ -48,7 +48,7 @@ function pageMovement() {
   let t1 = performance.now();
   siteTime = (t1 - vt)/1000;
   pgTime = (t1 - pt)/1000;
-  dvTime = (t1 - dt)/1000;
+  dvTime = (t1 - dt)/60000;
 
   // if readTest activated, start comparing dvTime & dvPauses with estimates
   // once read conditions met change readTest to 'read'
